@@ -138,8 +138,36 @@ Charon.connect(:stdio,
 ```elixir
 Charon.connect(:http,
   url: "http://localhost:3000/mcp",  # Required: server URL
-  headers: [{"Authorization", "Bearer token"}],  # Optional: custom headers
+  headers: [{"authorization", "Bearer token"}],  # Optional: custom headers
   timeout: 30_000                     # Optional: request timeout
+)
+```
+
+### Authentication
+
+For MCP servers requiring authentication, pass headers with your credentials:
+
+```elixir
+# Bearer token authentication
+{:ok, conn} = Charon.connect(:http,
+  url: "https://api.example.com/mcp",
+  headers: [{"authorization", "Bearer your-jwt-token"}]
+)
+
+# API key authentication
+{:ok, conn} = Charon.connect(:http,
+  url: "https://api.example.com/mcp",
+  headers: [{"x-api-key", "your-api-key"}]
+)
+
+# Multiple headers
+{:ok, conn} = Charon.connect(:http,
+  url: "https://api.example.com/mcp",
+  headers: [
+    {"authorization", "Bearer token"},
+    {"x-api-key", "key"},
+    {"x-custom-header", "value"}
+  ]
 )
 ```
 

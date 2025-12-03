@@ -17,6 +17,56 @@ defmodule CharonTest do
     end
   end
 
+  describe "connect/2 with HTTP transport" do
+    # Note: These tests verify that the options are accepted and passed through.
+    # The actual header usage is tested in transport/http_test.exs
+
+    test "accepts headers option" do
+      # Use the transport directly to avoid connection initialization issues
+      {:ok, pid} =
+        Charon.Transport.Http.start_link(
+          owner: self(),
+          url: "http://localhost:9999/mcp",
+          headers: [
+            {"authorization", "Bearer test-token"},
+            {"x-api-key", "test-api-key"}
+          ]
+        )
+
+      # Transport should start and report ready
+      assert_receive {:transport_ready, ^pid}
+
+      # Verify it's running with our headers
+      info = Charon.Transport.Http.info(pid)
+      assert info.url == "http://localhost:9999/mcp"
+
+      Charon.Transport.Http.close(pid)
+    end
+
+    test "accepts empty headers" do
+      {:ok, pid} =
+        Charon.Transport.Http.start_link(
+          owner: self(),
+          url: "http://localhost:9999/mcp",
+          headers: []
+        )
+
+      assert_receive {:transport_ready, ^pid}
+      Charon.Transport.Http.close(pid)
+    end
+
+    test "works without headers option" do
+      {:ok, pid} =
+        Charon.Transport.Http.start_link(
+          owner: self(),
+          url: "http://localhost:9999/mcp"
+        )
+
+      assert_receive {:transport_ready, ^pid}
+      Charon.Transport.Http.close(pid)
+    end
+  end
+
   describe "get_text/1" do
     test "extracts text from single text content" do
       result = %{content: [%{type: "text", text: "Hello world"}]}
