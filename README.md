@@ -10,6 +10,12 @@ An Elixir client for the [Model Context Protocol (MCP)](https://modelcontextprot
 - **Non-blocking**: Async operations with ETS-backed request tracking
 - **Extensible**: Custom notification handlers and transport implementations
 
+## Requirements
+
+- **Elixir** >= 1.14
+- **Erlang/OTP** >= 25
+- **Node.js** >= 18 (only for stdio transport with npm-based MCP servers)
+
 ## Installation
 
 Add `charon` to your list of dependencies in `mix.exs`:
@@ -259,7 +265,58 @@ mix test
 
 # Run with coverage
 mix test --cover
+
+# Run Playwright integration tests (requires Node.js)
+mix test --include playwright
 ```
+
+### Running Playwright Tests in Docker (Headless)
+
+For CI/CD or headless environments, you can run Playwright tests in Docker:
+
+```dockerfile
+# Dockerfile.test
+FROM mcr.microsoft.com/playwright:v1.40.0-jammy
+
+# Install Erlang and Elixir
+RUN apt-get update && apt-get install -y \
+    erlang \
+    elixir \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY . .
+
+RUN mix local.hex --force && mix local.rebar --force
+RUN mix deps.get
+RUN mix compile
+
+# Run tests with Playwright
+CMD ["mix", "test", "--include", "playwright"]
+```
+
+Or use docker-compose:
+
+```yaml
+# docker-compose.test.yml
+version: '3.8'
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      - MIX_ENV=test
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+```
+
+Run with:
+
+```bash
+docker-compose -f docker-compose.test.yml up --build
+```
+
+**Note:** The `mcr.microsoft.com/playwright` image includes all browser dependencies pre-installed for headless execution.
 
 ## Contributing
 
